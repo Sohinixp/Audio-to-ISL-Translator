@@ -25,4 +25,4 @@ As a Computer Science student and aspiring lawyer, this project was built with a
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/Sohinixp/ISL-Audio-Translator.git](https://github.com/Sohinixp/ISL-Audio-Translator.git)
+   git clone [https://github.com/Sohinixp/ISL-Web-Project.git](https://github.com/Sohinixp/ISL-Web-Project.git)
