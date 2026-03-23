@@ -5,26 +5,25 @@ let scene, camera, renderer, avatar;
 let recognition, mappingData = {};
 let isLoaded = false;
 let isAnimating = false;
-let animationQueue = []; // Queues words so they play one after another
+let animationQueue = [];
 
 const container = document.getElementById('canvas-container');
-const speechBox = document.getElementById('speech-box');
+// UPDATED: 'speech-box' is now 'output'
+const speechBox = document.getElementById('output'); 
 const startBtn = document.getElementById('start-btn');
 const stopBtn = document.getElementById('stop-btn');
 const langSelect = document.getElementById('lang-select');
 
 async function init() {
-    // 1. LOAD THE MAPPING JSON FIRST
     try {
         const response = await fetch('./mapping.json');
         mappingData = await response.json();
         console.log("✅ Mapping Loaded. Words mapped:", Object.keys(mappingData).length);
     } catch (error) {
-        console.error("❌ Failed to load mapping.json. Make sure it is in the same folder as app.js", error);
-        speechBox.innerText = "Error: mapping.json not found.";
+        console.error("❌ Failed to load mapping.json", error);
+        if(speechBox) speechBox.innerText = "Error: mapping.json not found.";
     }
 
-    // 2. SETUP SCENE
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 1.2, 3.5);
@@ -62,12 +61,12 @@ function loadAvatar() {
 
         scene.add(avatar);
         isLoaded = true;
-        speechBox.innerText = "Avatar and Mapping Ready. Click Start.";
+        // UPDATED: Added safety check for speechBox
+        if(speechBox) speechBox.innerText = "Avatar Ready. Click Start.";
         console.log("✅ Avatar Loaded");
     });
 }
 
-// --- SPEECH RECOGNITION & QUEUEING ---
 function setupSpeech() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -76,112 +75,96 @@ function setupSpeech() {
     recognition.continuous = true;
 
     startBtn.addEventListener('click', () => {
+        // UPDATED: Handle CSS classes for the new styling
+        startBtn.classList.add('active');
+        startBtn.classList.remove('idle');
+        startBtn.innerText = "Listening...";
+        
         recognition.lang = langSelect.value;
         recognition.start();
-        speechBox.innerText = "Listening...";
-        console.log("🎤 Mic Started");
+        if(speechBox) speechBox.innerText = "Listening...";
     });
 
     stopBtn.addEventListener('click', () => {
+        // UPDATED: Reset button appearance
+        startBtn.classList.remove('active');
+        startBtn.classList.add('idle');
+        startBtn.innerText = "Start Recognition";
+        
         recognition.stop();
-        speechBox.innerText = "Stopped.";
+        if(speechBox) speechBox.innerText = "Stopped.";
     });
 
     recognition.onresult = (event) => {
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-        speechBox.innerText = `Heard: "${transcript}"`;
-        console.log("👂 Heard:", transcript);
+        if(speechBox) speechBox.innerText = transcript; // Clean display for transcription
 
-        // Remove punctuation and split into words
         const words = transcript.replace(/[.,!?]/g, '').split(' ');
         
-        // Check if words exist in mapping.json, if so, add to queue
         words.forEach(word => {
             if (mappingData[word]) {
                 animationQueue.push(word);
-            } else {
-                console.log(`Word '${word}' not found in mapping.json`);
             }
         });
 
-        // Start playing the queue if not already playing
         processQueue();
     };
 }
 
-// --- ANIMATION CONTROLLER ---
+// ... (Rest of your processQueue, playAnimation, applyFrame functions remain the same) ...
+
 async function processQueue() {
     if (isAnimating || animationQueue.length === 0) return;
-    
     isAnimating = true;
-    const currentWord = animationQueue.shift(); // Take first word from queue
-    
-    await playAnimation(currentWord); // Wait for animation to finish
-    
-    // Quick pause between words
+    const currentWord = animationQueue.shift(); 
+    await playAnimation(currentWord); 
     await new Promise(res => setTimeout(res, 300)); 
-    
     isAnimating = false;
-    processQueue(); // Play next word if any
+    processQueue(); 
 }
 
-// --- FETCH AND PLAY JSON FRAMES ---
 async function playAnimation(word) {
     return new Promise(async (resolve) => {
         try {
-            // mappingData[word] looks like "A/apple.json"
             const animPath = `./animations/${mappingData[word]}`;
             const response = await fetch(animPath);
             const frames = await response.json();
-
-            console.log(`🎬 Playing '${word}' (${frames.length} frames)`);
-
             let currentFrame = 0;
-            const fps = 30; // Matches standard Colab export speed
+            const fps = 30; 
             const frameInterval = 1000 / fps;
 
             const timer = setInterval(() => {
                 if (currentFrame >= frames.length) {
                     clearInterval(timer);
-                    resetToTPose(); // Go back to resting position
-                    resolve(); // Tell the queue we are done
+                    resetToTPose();
+                    resolve();
                     return;
                 }
-
                 applyFrame(frames[currentFrame]);
                 currentFrame++;
             }, frameInterval);
-
         } catch (error) {
-            console.error(`❌ Error playing animation for '${word}':`, error);
-            resolve(); // Skip and continue if error occurs
+            console.error(`❌ Error playing: ${word}`, error);
+            resolve();
         }
     });
 }
 
 function applyFrame(frameData) {
     if (!avatar) return;
-
-    // Read every bone in the current frame and apply rotation
     for (const [boneName, rot] of Object.entries(frameData)) {
         const bone = avatar.getObjectByName(boneName);
         if (bone) {
-            // Assuming your JSON exports Euler angles (x, y, z)
             bone.rotation.set(rot.x || 0, rot.y || 0, rot.z || 0);
         }
     }
-    
-    // Force the skin/mesh to update to the new bone positions
     avatar.traverse(c => { if (c.isSkinnedMesh) c.skeleton.update(); });
 }
 
 function resetToTPose() {
     if (!avatar) return;
-    // You can customize this if your resting pose isn't perfectly 0,0,0
     avatar.traverse(child => {
-        if (child.isBone) {
-            child.rotation.set(0, 0, 0);
-        }
+        if (child.isBone) child.rotation.set(0, 0, 0);
     });
     avatar.traverse(c => { if (c.isSkinnedMesh) c.skeleton.update(); });
 }

@@ -3,69 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASL Multilingual Avatar</title>
-    <style>
-        :root {
-            --bg: #1e293b; --card: #334155; --accent: #38bdf8;
-            --green: #2dd4bf; --text: #f8fafc;
-        }
-        body { margin: 0; background: var(--bg); font-family: 'Segoe UI', sans-serif; color: var(--text); overflow: hidden; }
-        
-        #menu-bar { 
-            position: absolute; top: 0; width: 100%; height: 50px; 
-            background: var(--card); display: flex; align-items: center; padding: 0 20px;
-            border-bottom: 1px solid #475569; z-index: 100;
-        }
-        
-        #canvas-container { width: 100vw; height: 100vh; background: radial-gradient(circle, #334155 0%, #1e293b 100%); }
-        
-        #speech-box {
-            position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
-            width: 60%; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--accent);
-            padding: 20px; border-radius: 12px; text-align: center; font-size: 22px; min-height: 40px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        #controls { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; }
-        
-        button { 
-            padding: 12px 30px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer;
-            transition: 0.3s; color: white; font-size: 16px;
-        }
-        .btn-start { background: var(--green); box-shadow: 0 4px 0 #14b8a6; }
-        .btn-start:active { transform: translateY(2px); box-shadow: none; }
-        .btn-stop { background: #64748b; }
-        
-        select { background: var(--card); color: white; border: 1px solid var(--accent); padding: 8px; border-radius: 4px; outline: none; }
-    </style>
+    <title>ISL Multilingual Avatar</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="menu-bar">
-    <span style="margin-right: 15px; font-weight: bold;">Language:</span>
-    <select id="lang-select">
-        <option value="en-US">English</option>
-        <option value="bn-IN">Bengali</option>
-        <option value="hi-IN">Hindi</option>
-        <option value="mr-IN">Marathi</option>
-        <option value="te-IN">Telugu</option>
-        <option value="ta-IN">Tamil</option>
-        <option value="ml-IN">Malayalam</option>
-    </select>
-</div>
+    <div id="app-wrapper">
+        <aside id="sidebar">
+            <div class="brand">
+                <h1>ISL <span class="thin">Translator</span></h1>
+                <p class="label">Project Accessibility</p>
+            </div>
 
-<div id="canvas-container"></div>
+            <div class="interface-actions">
+                <p class="label">Select Language</p>
+                <div class="scroll-nav">
+                    <select id="lang-select" class="lang-btn">
+                        <option value="en-US">English</option>
+                        <option value="bn-IN">Bengali</option>
+                        <option value="hi-IN">Hindi</option>
+                        <option value="mr-IN">Marathi</option>
+                        <option value="te-IN">Telugu</option>
+                        <option value="ta-IN">Tamil</option>
+                        <option value="ml-IN">Malayalam</option>
+                    </select>
+                </div>
 
-<div id="speech-box">Waiting for speech...</div>
+                <button id="start-btn" class="idle">Start Recognition</button>
+                <button id="stop-btn" class="secondary-btn">Stop</button>
+            </div>
+        </aside>
 
-<div id="controls">
-    <button id="start-btn" class="btn-start">Start Recognition</button>
-    <button id="stop-btn" class="btn-stop">Stop</button>
-</div>
+        <main id="workspace">
+            <div id="canvas-container"></div>
 
-<script type="importmap">
-    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
-</script>
-<script type="module" src="app.js"></script>
+            <div id="speech-overlay">
+                <div class="recognition-box">
+                    <p class="box-label">LIVE TRANSCRIPTION</p>
+                    <div id="output">Waiting for speech...</div>
+                </div>
+            </div>
+
+            <div id="avatar-controls">
+                <button class="ctrl-btn">Reset Camera</button>
+                <div class="ctrl-btn">
+                    Speed: 
+                    <select id="speed-select">
+                        <option value="1">1.0x</option>
+                        <option value="0.5">0.5x</option>
+                        <option value="1.5">1.5x</option>
+                    </select>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="importmap">
+        { 
+            "imports": { 
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js", 
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" 
+            } 
+        }
+    </script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
